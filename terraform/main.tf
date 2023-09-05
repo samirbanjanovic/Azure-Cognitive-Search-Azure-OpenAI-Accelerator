@@ -11,145 +11,26 @@ provider "azurerm" {
   features {}
 }
 
-# Code translation done using GitHub Copilot Labs
+locals {
+  azureSearchName =  var.unique ? "${var.azureSearchName}-${random_string.random.result}" : var.azureSearchName
+  cognitiveServiceName =  var.unique ? "${var.cognitiveServiceName}-${random_string.random.result}" : var.cognitiveServiceName
+  SQLServerName =  var.unique ? "${var.SQLServerName}-${random_string.random.result}" : var.SQLServerName
+  bingSearchAPIName = var.unique ? "${var.bingSearchAPIName}-${random_string.random.result}" : var.bingSearchAPIName
+  cosmosDBAccountName = var.unique ? "${var.cosmosDBAccountName}-${random_string.random.result}" : var.cosmosDBAccountName
+  cosmosDBDatabaseName = var.unique ? "${var.cosmosDBDatabaseName}-${random_string.random.result}" : var.cosmosDBDatabaseName
+  cosmosDBContainerName = var.unique ? "${var.cosmosDBContainerName}-${random_string.random.result}" : var.cosmosDBContainerName
+  formRecognizerName = var.unique ? "${var.formRecognizerName}-${random_string.random.result}" : var.formRecognizerName
+  blobStorageAccountName = var.unique ? "${var.blobStorageAccountName}-${random_string.random.result}" : var.blobStorageAccountName
+}
+
+# generate 5 character random lowercase string
+resource "random_string" "random" {
+  length  = 5
+  special = false
+  upper   = false
+}
 
 resource "azurerm_resource_group" "rg" {
-  name     = "rg-openai"
-  location = "eastus"
-}
-
-resource "azurerm_search_service" "azureSearch" {
-  name                          = var.azureSearchName
-  location                      = var.location
-  sku                           = var.azureSearchSKU
-  replica_count                 = var.azureSearchReplicaCount
-  partition_count               = var.azureSearchPartitionCount
-  hosting_mode                  = var.azureSearchHostingMode
-  semantic_search               = "free"
-  public_network_access_enabled = true
-}
-
-resource "azurerm_cognitive_account" "cognitiveService" {
-  name                = var.cognitiveServiceName
-  location            = var.location
-  resource_group_name = var.rgName
-  sku                 = var.cognitiveServiceSKU
-  kind                = "CognitiveServices"
-  properties = {
-    api_properties = {
-      statistics_enabled = false
-    }
-  }
-}
-
-resource "azurerm_mssql_server" "sqlserver" {
-  name                         = var.SQLServerName
-  location                     = var.location
-  resource_group_name          = azurerm_resource_group.rg.name
-  version                      = var.SQLVersion
-  administrator_login          = var.SQLAdministratorLogin
-  administrator_login_password = var.SQLAdministratorLoginPassword
-  tags                         = var.tags
-}
-
-resource "azurerm_sql_firewall_rule" "AllowAllAzureIPs" {
-  name                = "AllowAllAzureIPs"
-  resource_group_name = azurerm_resource_group.rg.name
-  server_name         = azurerm_sql_server.srv.name
-  start_ip_address    = "0.0.0.0"
-  end_ip_address      = "255.255.255.255"
-}
-
-resource "azurerm_cosmosdb_account" "cosmosDBAccount" {
-  name                = var.cosmosDBAccountName
-  location            = var.location
-  resource_group_name = var.resourceGroupName
-  offer_type          = "Standard"
-  kind                = "GlobalDocumentDB"
-
-  capabilities {
-    name = "EnableServerless"
-  }
-
-  geo_location {
-    location          = var.location
-    failover_priority = 0
-  }
-
-  consistency_policy {
-    consistency_level       = "Session"
-    max_interval_in_seconds = 5
-    max_staleness_prefix    = 100
-  }
-
-  enable_free_tier                   = false
-  enable_multiple_write_locations    = false
-  is_virtual_network_filter_enabled  = false
-  enable_automatic_failover          = false
-  enable_public_network_access       = true
-  enable_analytical_storage          = false
-  enable_virtual_network             = false
-}
-
-resource "azurerm_cosmosdb_sql_database" "cosmosDBDatabase" {
-  name                = var.cosmosDBDatabaseName
-  resource_group_name = var.resourceGroupName
-  account_name        = var.cosmosDBAccountName
-  location            = var.location
-  consistency_policy {
-    consistency_level = "Session"
-  }
-}
-
-resource "azurerm_cosmosdb_sql_container" "cosmosDBContainer" {
-  name                  = var.cosmosDBContainerName
-  resource_group_name   = var.resourceGroupName
-  account_name          = var.cosmosDBAccountName
-  database_name         = var.cosmosDBDatabaseName
-  partition_key_path    = ["/user_id"]
-  default_ttl           = 1000
-  conflict_resolution_policy {
-    mode = "LastWriterWins"
-  }
-}
-
-resource "azurerm_cognitive_account" "bingSearchAccount" {
-  name                = var.bing_search_api_name
-  location            = "global"
-  kind                = "Bing.Search.v7"
-  sku_name            = "S1"
-  resource_group_name = var.resource_group_name
-}
-
-resource "azurerm_cognitive_account" "formRecognizerAccount" {
-  name = var.formRecognizerName
+  name     = var.resourceGroupName
   location = var.location
-  kind = "FormRecognizer"
-
-  sku {
-    name = "S0"
-  }
-}
-
-resource "azurerm_storage_account" "blobStorageAccount" {
-  name                     = var.blobStorageAccountName
-  location                 = var.location
-  resource_group_name      = var.resourceGroupName
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-
-  tags = {
-    environment = "Production"
-  }
-}
-
-resource "azurerm_storage_account_blob_service_properties" "blobServices" {
-  storage_account_id = azurerm_storage_account.blobStorageAccount.id
-  name = "default"
-}
-
-resource "azurerm_storage_container" "blobStorageContainer" {
-  for_each = toset(["books", "cord19", "mixed"])
-  name     = each.key
-  storage_account_name = azurerm_storage_account.blobServices.name
 }
