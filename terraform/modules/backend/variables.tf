@@ -25,6 +25,12 @@ variable "azureSearchName" {
   description = "Required. The name of the Azure Search service deployed previously."
 }
 
+variable "azureSearchKey" {
+    type = string
+    sensitive = true
+    description = "Required. The API key for the Azure Search service deployed previously."
+}
+
 variable "azureSearchAPIVersion" {
   type    = string
   default = "2023-07-01-Preview"
