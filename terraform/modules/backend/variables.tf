@@ -1,3 +1,14 @@
+variable "resourceGroupName" {
+  type        = string
+  description = "Required. Name of resource group."
+}
+
+variable "location" {
+    type        = string
+    default     = "eastus"
+    description = "Optional, defaults to eastus. The location of the resources."
+}
+
 variable "appId" {
   type        = string
   description = "Required. Active Directory App ID."
@@ -13,11 +24,6 @@ variable "blobSASToken" {
   type        = string
   sensitive   = true
   description = "Required. The SAS token for the blob hosting your data."
-}
-
-variable "resourceGroupName" {
-  type        = string
-  description = "Required. Name of resource group."
 }
 
 variable "azureSearchName" {
@@ -50,7 +56,7 @@ variable "azureOpenAIAPIKey" {
 variable "azureOpenAIModelName" {
   type        = string
   default     = "gpt-4"
-  description = "'Optional. The model name for the Azure OpenAI service."
+  description = "Optional. The model name for the Azure OpenAI service."
 }
 
 variable "azureOpenAIAPIVersion" {
@@ -144,10 +150,4 @@ variable "appServicePlanSKU" {
         condition = contains(["B3", "S3", "P2v3"], var.appServicePlanSKU)
         error_message = "The SKU of the App Service Plan must be B3, S3 or P2v3."
     }
-}
-
-variable "location" {
-    type        = string
-    default     = "eastus"
-    description = "Optional, defaults to eastus. The location of the resources."
 }

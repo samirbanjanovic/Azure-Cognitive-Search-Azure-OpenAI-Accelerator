@@ -1,12 +1,13 @@
-variable "unique" {
-  type    = bool
-  default = false
-}
-
 variable "resourceGroupName" {
   type        = string
   default     = "openai-rg"
   description = "Optional. The name of the resource group in which to create the resource. Changing this forces a new resource to be created."
+}
+
+variable "location" {
+  type        = string
+  default     = "eastus"
+  description = "Optional, defaults to eastus. The location of the resource group."
 }
 
 variable "azureSearchName" {
@@ -85,7 +86,7 @@ variable "bingSearchAPIName" {
   description = "Optional. The name of the Bing Search API resource."
 }
 
-variable "Optional. Cosmos DB account name, max length 44 characters, lowercase" {
+variable "cosmosDBAccountName" {
   type        = string
   default     = "cosmosdb-account"
   description = "Optional. The name of the CosmosDB account."
@@ -117,17 +118,4 @@ variable "blobStorageAccountName" {
   type        = string
   default     = "blob-storage-account"
   description = "Optional. The name of the Blob Storage account."
-}
-
-variable "location" {
-  type        = string
-  default     = "eastus"
-  description = "Optional, defaults to eastus. The location of the resource group."
-}
-
-# used for generating unique names where needed
-resource "random_string" "random" {
-    length  = 5
-    special = false
-    upper   = false  
 }

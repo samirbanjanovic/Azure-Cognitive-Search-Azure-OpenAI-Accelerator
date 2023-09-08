@@ -75,7 +75,7 @@ resource "azurerm_cosmosdb_account" "cosmosDBAccount" {
 resource "azurerm_cosmosdb_sql_database" "cosmosDBDatabase" {
   name                = var.cosmosDBDatabaseName
   resource_group_name = var.resourceGroupName
-  account_name        = var.cosmosDBAccountName
+  account_name        = azurerm_cosmosdb_account.cosmosDBAccount.name
   location            = var.location
   consistency_policy {
     consistency_level = "Session"
@@ -85,8 +85,8 @@ resource "azurerm_cosmosdb_sql_database" "cosmosDBDatabase" {
 resource "azurerm_cosmosdb_sql_container" "cosmosDBContainer" {
   name                  = var.cosmosDBContainerName
   resource_group_name   = var.resourceGroupName
-  account_name          = var.cosmosDBAccountName
-  database_name         = var.cosmosDBDatabaseName
+  account_name          = azurerm_cosmosdb_account.cosmosDBAccount.name
+  database_name         = azurerm_cosmosdb_sql_database.cosmosDBDatabase.name
   partition_key_path    = ["/user_id"]
   default_ttl           = 1000
   conflict_resolution_policy {
@@ -106,7 +106,7 @@ resource "azurerm_cognitive_account" "formRecognizerAccount" {
   name = var.formRecognizerName
   location = var.location
   kind = "FormRecognizer"
-
+  
   sku {
     name = "S0"
   }
