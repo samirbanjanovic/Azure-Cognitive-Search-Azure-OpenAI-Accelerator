@@ -71,8 +71,7 @@ variable "bingSearchUrl" {
 }
 
 variable "bingSearchAPIKey" {
-  type = string
-  sensitive = true
+  default = "no-op"
   description = "Required. The API key for the Bing Search API."
 }
 

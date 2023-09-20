@@ -8,7 +8,7 @@ output "cosmosDBAccountName" {
 }
 
 output "cosmosDBConnectionString" {
-  value     = azurerm_cosmosdb_account.datasource.connection_strings[0].connection_string
+  value     = azurerm_cosmosdb_account.datasource.connection_strings[0]
   sensitive = true
 }
 
@@ -26,8 +26,24 @@ output "blobSASToken" {
   sensitive = true
 }
 
+output "bingSearchEndpoint" {
+  value = jsondecode(azapi_resource.bingSearchAccount.output).properties.endpoint
+}
+
+output "bingSearchName" {
+  value = azapi_resource.bingSearchAccount.name
+}
+
 output "bingSearchAPIKey" {
-  value     = azurerm_cognitive_account.bingSearchAccount.primary_access_key
+  value     = jsondecode(data.azapi_resource_action.bingSearchAccount.output).key1
   sensitive = true
 }
 
+output "azureSearchName" {
+  value = azurerm_search_service.datasource.name
+}
+
+output "azureSearchKey" {
+  value     = azurerm_search_service.datasource.primary_key
+  sensitive = true
+}

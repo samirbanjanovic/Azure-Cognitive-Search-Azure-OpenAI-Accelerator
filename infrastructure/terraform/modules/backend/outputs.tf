@@ -1,5 +1,5 @@
 output "backendAppServicePlanName" {
-  value = azurerm_app_service_plan.backend.name
+  value = azurerm_service_plan.backend.name
 }
 
 output "backendWebAppName" {
@@ -7,10 +7,10 @@ output "backendWebAppName" {
 }
 
 output "botServiceName" {
-  value = azurerm_bot_connection.backend.name
+  value = azurerm_bot_channels_registration.backend.name
 }
 
 output "botDirectLineChannelKey" {
-  value = azurerm_bot_connection.backend.direct_line_secret
+  value     = ""
+  sensitive = true
 }
-

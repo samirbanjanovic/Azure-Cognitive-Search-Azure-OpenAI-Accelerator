@@ -1,40 +1,26 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 3.0.0"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = ">= 2.0.0"
-    }
-  }
-}
 
-provider "azurerm" {
-  features {}
-}
-
-provider "azuread" {
-}
 
 locals {
-  webAppName             = var.unique ? "${var.appName}-${random_string.random.result}" : var.azureSearchName
-  azureSearchName        = var.unique ? "${var.azureSearchName}-${random_string.random.result}" : var.azureSearchName
-  cognitiveServiceName   = var.unique ? "${var.cognitiveServiceName}-${random_string.random.result}" : var.cognitiveServiceName
-  SQLServerName          = var.unique ? "${var.SQLServerName}-${random_string.random.result}" : var.SQLServerName
-  bingSearchAPIName      = var.unique ? "${var.bingSearchAPIName}-${random_string.random.result}" : var.bingSearchAPIName
-  cosmosDBAccountName    = var.unique ? "${var.cosmosDBAccountName}-${random_string.random.result}" : var.cosmosDBAccountName
-  cosmosDBDatabaseName   = var.unique ? "${var.cosmosDBDatabaseName}-${random_string.random.result}" : var.cosmosDBDatabaseName
-  cosmosDBContainerName  = var.unique ? "${var.cosmosDBContainerName}-${random_string.random.result}" : var.cosmosDBContainerName
-  formRecognizerName     = var.unique ? "${var.formRecognizerName}-${random_string.random.result}" : var.formRecognizerName
-  blobStorageAccountName = var.unique ? "${var.blobStorageAccountName}-${random_string.random.result}" : var.blobStorageAccountName
+  resourceGroupName      = "azureai-accelerate-${random_string.random.result}-rg"
+  location               = "eastus"
+  appName                = "azureai-accelerate"
+  webAppName             = "azureai-accelerate-webapp-${random_string.random.result}"
+  azureSearchName        = "azureai-accelerate-search-${random_string.random.result}"
+  cognitiveServiceName   = "azureai-accelerate-cs-${random_string.random.result}"
+  SQLServerName          = "sql-server-${random_string.random.result}"
+  SQLServerDatabase      = "SampleDB"
+  bingSearchAPIName      = "azureai-accelerate-bing-api-${random_string.random.result}"
+  cosmosDBAccountName    = "azureai-accelerate-cosmosdb-${random_string.random.result}"
+  cosmosDBDatabaseName   = "cosmosdb-database-${random_string.random.result}"
+  cosmosDBContainerName  = "cosmosdb-container-${random_string.random.result}"
+  formRecognizerName     = "azureai-accelerate-form-recognizer-${random_string.random.result}"
+  blobStorageAccountName = "azaiaclrtblob${random_string.random.result}"
 }
 
 # create resource group for all resources
 resource "azurerm_resource_group" "this" {
-  name     = var.resourceGroupName
-  location = var.location
+  name     = local.resourceGroupName
+  location = local.location
 }
 
 # generate 5 character random lowercase string
@@ -64,7 +50,7 @@ module "openai" {
   # insert the 2 required variables here
   resource_group_name = azurerm_resource_group.this.name
   location            = azurerm_resource_group.this.location
-  application_name    = var.appName
+  application_name    = local.appName
   deployment = {
     "gpt-35-turbo" = {
       name          = "gpt-35-turbo"
@@ -90,21 +76,22 @@ module "datasource" {
 
   # resource placement 
   resourceGroupName = azurerm_resource_group.this.name
+  resourceGroupId   = azurerm_resource_group.this.id
   location          = azurerm_resource_group.this.location
 
   # azure search
   azureSearchName           = local.azureSearchName
-  azureSearchSKU            = var.azureSearchSKU
-  azureSearchReplicaCount   = var.azureSearchReplicaCount
-  azureSearchHostingMode    = var.azureSearchHostingMode
-  azureSearchPartitionCount = var.azureSearchPartitionCount
+  azureSearchSKU            = "standard"
+  azureSearchReplicaCount   = 1
+  azureSearchHostingMode    = "default"
+  azureSearchPartitionCount = 1
 
   # cognitive service
   cognitiveServiceName = local.cognitiveServiceName
 
   # sql server
   SQLServerName                 = local.SQLServerName
-  SQLDBName                     = var.SQLDBName
+  SQLDBName                     = local.SQLServerDatabase
   SQLAdministratorLogin         = var.SQLAdministratorLogin
   SQLAdministratorLoginPassword = var.SQLAdministratorLoginPassword
 
@@ -147,16 +134,16 @@ module "backend" {
   azureSearchAPIVersion = "2023-07-01-Preview"
 
   # openai
-  azureOpenAIName   = var.appName
+  azureOpenAIName   = local.appName
   azureOpenAIAPIKey = module.openai.openai_primary_key
 
   # bing search
   bingSearchName   = module.datasource.bingSearchName
-  bingSearchAPIKey = module.datasource.bingSearchAPIKeyk
+  bingSearchAPIKey = module.datasource.bingSearchAPIKey
 
   # SQL
   SQLServerName     = local.SQLServerName
-  SQLServerDatabase = var.SQLDBName
+  SQLServerDatabase = local.SQLServerDatabase
   SQLServerUsername = var.SQLAdministratorLogin
   SQLServerPassword = var.SQLAdministratorLoginPassword
 
@@ -166,11 +153,11 @@ module "backend" {
   cosmosDBConnectionString = module.datasource.cosmosDBConnectionString
 
   # bot
-  botId = "${var.appName}-bot"
+  botId = "${local.appName}-bot"
 
   # app service plan
-  appServicePlanName = var.appServicePlanName
-  appServicePlanSKU  = var.appServicePlanSKU
+  appServicePlanName = "${local.appName}-backend-sp"
+  appServicePlanSKU  = "S3"
 
   depends_on = [
     module.datasource
@@ -184,9 +171,9 @@ module "frontend" {
   resourceGroupName = azurerm_resource_group.this.name
   location          = azurerm_resource_group.this.location
 
-  webAppName         = "${var.appName}-frontend"
+  webAppName         = "${local.appName}-frontend"
   appServicePlanSKU  = "S3"
-  appServicePlanName = "${var.appName}-frontend-sp"
+  appServicePlanName = "${local.appName}-frontend-sp"
 
   # bot service
   botServiceName          = module.backend.botServiceName
@@ -201,7 +188,7 @@ module "frontend" {
   azureSearchKey        = module.datasource.azureSearchAPIKey
 
   # open ai
-  azureOpenAIName       = var.appName
+  azureOpenAIName       = local.appName
   azureOpenAIAPIKey     = module.openai.openai_primary_key
   azureOpenAIModelName  = "gpt-35-turbo"
   azureOpenAIAPIVersion = "2023-05-15"

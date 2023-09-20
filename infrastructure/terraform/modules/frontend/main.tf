@@ -1,4 +1,4 @@
-resource "azurerm_app_service_plan" "frontend" {
+resource "azurerm_service_plan" "frontend" {
   name                = var.appServicePlanName
   location            = var.location
   resource_group_name = var.resourceGroupName
@@ -9,10 +9,10 @@ resource "azurerm_app_service_plan" "frontend" {
 
 # create a new web app with the supplied name and plan
 resource "azurerm_linux_web_app" "frontend" {
-  name                       = local.webAppName
+  name                       = var.webAppName
   location                   = var.location
   resource_group_name        = var.resourceGroupName
-  app_service_plan_id        = azurerm_app_service_plan.frontend.id
+  service_plan_id            = azurerm_service_plan.frontend.id
   enabled                    = true
   client_affinity_enabled    = false
   client_certificate_enabled = false
@@ -28,7 +28,7 @@ resource "azurerm_linux_web_app" "frontend" {
       python_version = "3.10"
     }
     load_balancing_mode = "LeastRequests"
-    auto_heal_enabled   = false
+
     minimum_tls_version = "1.2"
     ftps_state          = "AllAllowed"
     websockets_enabled  = false

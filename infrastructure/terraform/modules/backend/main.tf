@@ -15,7 +15,7 @@ resource "random_string" "random" {
 
 
 # create a new linux app service plan for the supplied plan name and sku
-resource "azurerm_app_service_plan" "backend" {
+resource "azurerm_service_plan" "backend" {
   name                = var.appServicePlanName
   location            = var.location
   resource_group_name = var.resourceGroupName
@@ -28,7 +28,7 @@ resource "azurerm_linux_web_app" "backend" {
   name                       = local.webAppName
   location                   = var.location
   resource_group_name        = var.resourceGroupName
-  app_service_plan_id        = azurerm_app_service_plan.backend.id
+  service_plan_id            = azurerm_service_plan.backend.id
   enabled                    = true
   client_affinity_enabled    = false
   client_certificate_enabled = false
@@ -44,7 +44,6 @@ resource "azurerm_linux_web_app" "backend" {
       python_version = "3.10"
     }
     load_balancing_mode = "LeastRequests"
-    auto_heal_enabled   = false
     minimum_tls_version = "1.2"
     ftps_state          = "AllAllowed"
     websockets_enabled  = false
@@ -84,7 +83,7 @@ resource "azurerm_linux_web_app" "backend" {
     BING_SEARCH_URL                  = var.bingSearchUrl
     BING_SUBSCRIPTION_KEY            = var.bingSearchAPIKey
     SQL_SERVER_NAME                  = var.SQLServerName
-    SQL_SERVER_DATABASE_NAME         = var.SQLServerDatabaseName
+    SQL_SERVER_DATABASE_NAME         = var.SQLServerDatabase
     SQL_SERVER_USERNAME              = var.SQLServerUsername
     SQL_SERVER_PASSWORD              = var.SQLServerPassword
     AZURE_COSMOSDB_ENDPOINT          = "https://${var.cosmosDBAccountName}.documents.azure.com:443/"
@@ -95,18 +94,27 @@ resource "azurerm_linux_web_app" "backend" {
   }
 }
 
-resource "azurerm_bot_channel_registration" "backend" {
+resource "azurerm_bot_channels_registration" "backend" {
   name                = var.botId
   resource_group_name = var.resourceGroupName
-  location            = var.location
-  sku_name            = var.botSKU
-  kind                = "azurebot"
-  bot_id              = local.botId
-  icon_url            = "https://docs.botframework.com/static/devportal/client/images/bot-framework-default.png"
-  endpoint            = local.botEndpoint
-  msa_app_id          = var.appId
-  luis_app_ids        = []
-  depends_on          = [
-    azurerm_app_service.webApp
+  location            = "global"
+  sku                 = var.botSKU
+
+  icon_url         = "https://docs.botframework.com/static/devportal/client/images/bot-framework-default.png"
+  endpoint         = local.botEndpoint
+  microsoft_app_id = var.appId
+
+  depends_on = [
+    azurerm_linux_web_app.backend
   ]
+}
+
+resource "azurerm_bot_channel_directline" "backend" {
+  bot_name            = azurerm_bot_channels_registration.backend.name
+  location            = "global"
+  resource_group_name = var.resourceGroupName
+  site {
+    name    = "default"
+    enabled = true
+  }
 }

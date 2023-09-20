@@ -1,13 +1,16 @@
 variable "resourceGroupName" {
   type        = string
-  default     = "openai-rg"
-  description = "Optional. The name of the resource group in which to create the resource. Changing this forces a new resource to be created."
+  description = "Required. The name of the resource group in which to create the resource. Changing this forces a new resource to be created."
+}
+
+variable "resourceGroupId" {
+  type = string
+  description = "Required. The ID of the resource group in which to create the resource. Changing this forces a new resource to be created."
 }
 
 variable "location" {
   type        = string
-  default     = "eastus"
-  description = "Optional, defaults to eastus. The location of the resource group."
+  description = "Required. The location of the resource group."
 }
 
 variable "azureSearchName" {
@@ -64,6 +67,16 @@ variable "cognitiveServiceName" {
   type        = string
   default     = "cognitive-service"
   description = "Optional. The name of our application. It has to be unique or use the unique flag to generate a random suffix."
+}
+
+variable "cognitiveServiceSKU" {
+  type        = string
+  default     = "S0"
+  description = "Optional, defaults to S0. The pricing tier of the Cognitive Services account."
+  validation {
+    condition     = contains(["S0", "S1", "S2", "S3"], var.cognitiveServiceSKU)
+    error_message = "Must be one of the following options: S0, S1, S2, S3"
+  }
 }
 
 variable "SQLServerName" {
