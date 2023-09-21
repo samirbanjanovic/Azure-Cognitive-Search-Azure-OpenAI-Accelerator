@@ -11,9 +11,6 @@ terraform {
     azapi = {
       source = "azure/azapi"
     }
-    http = {
-      source = "hashicorp/http"
-    }
   }
 }
 

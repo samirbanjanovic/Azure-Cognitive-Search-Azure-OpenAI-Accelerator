@@ -1,5 +1,3 @@
-
-
 locals {
   resourceGroupName      = "azureai-accelerate-${random_string.random.result}-rg"
   location               = "eastus"
